@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Ren’Py Shaders | IPreg’s Blog</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Ren’Py Shaders" />
+<meta name="author" content="ipreg" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="I decided to spend some time learning how to perform shaders inside Ren’Py. Specifically I wanted to be able to port shaders from ShaderToy into Ren’Py. While there is a page on it in the documentation, it doesn’t really give very good examples on how to implement them yourself or that Ren’Py literally implements the entirety of GLSL (As long as your system supports it). These shaders can be placed on literally any image in the game and I actually got much better framerates inside Ren’Py then I did inside the Shadertoy website itself." />
+<meta property="og:description" content="I decided to spend some time learning how to perform shaders inside Ren’Py. Specifically I wanted to be able to port shaders from ShaderToy into Ren’Py. While there is a page on it in the documentation, it doesn’t really give very good examples on how to implement them yourself or that Ren’Py literally implements the entirety of GLSL (As long as your system supports it). These shaders can be placed on literally any image in the game and I actually got much better framerates inside Ren’Py then I did inside the Shadertoy website itself." />
+<link rel="canonical" href="https://ipreg.github.io/2021/10/22/Renpy-Shader.html" />
+<meta property="og:url" content="https://ipreg.github.io/2021/10/22/Renpy-Shader.html" />
+<meta property="og:site_name" content="IPreg’s Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-10-22T00:00:00-04:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Ren’Py Shaders" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","url":"https://ipreg.github.io/2021/10/22/Renpy-Shader.html","headline":"Ren’Py Shaders","dateModified":"2021-10-22T00:00:00-04:00","datePublished":"2021-10-22T00:00:00-04:00","author":{"@type":"Person","name":"ipreg"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://ipreg.github.io/2021/10/22/Renpy-Shader.html"},"description":"I decided to spend some time learning how to perform shaders inside Ren’Py. Specifically I wanted to be able to port shaders from ShaderToy into Ren’Py. While there is a page on it in the documentation, it doesn’t really give very good examples on how to implement them yourself or that Ren’Py literally implements the entirety of GLSL (As long as your system supports it). These shaders can be placed on literally any image in the game and I actually got much better framerates inside Ren’Py then I did inside the Shadertoy website itself.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ipreg.github.io/feed.xml" title="IPreg's Blog" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper">
+<a class="site-title" rel="author" href="/">IPreg's Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger">
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav>
+</div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Ren'Py Shaders</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-10-22T00:00:00-04:00" itemprop="datePublished">
+        Oct 22, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>I decided to spend some time learning how to perform shaders inside Ren’Py. Specifically I wanted to be able to port shaders from <a href="https://www.shadertoy.com/" target="_blank" rel="noopener noreferrer">ShaderToy</a> into Ren’Py. While there <a href="https://www.renpy.org/doc/html/model.html" target="_blank" rel="noopener noreferrer">is a page on it</a> in the documentation, it doesn’t really give very good examples on how to implement them yourself or that Ren’Py literally implements the entirety of GLSL (As long as your system supports it). These shaders can be placed on literally any image in the game and I actually got much better framerates inside Ren’Py then I did inside the Shadertoy website itself.</p>
+
+<!--more-->
+<h2 id="porting-shadertoy-audio-to-renpy">Porting shadertoy audio to Ren’Py</h2>
+<p>I figured out a way to do it with very little code change. The biggest challenge was dealing with uniforms, as I make exclusive use of <code class="language-plaintext highlighter-rouge">fragment_functions</code> which do not have uniforms propagated through them. There were two ways to deal with these: pass them as function arguments, or use them in global variables; and unfortunately there isn’t a universal solution. If they don’t work as global variables, pass them as function arguments. As reference here is the generic <code class="language-plaintext highlighter-rouge">register_shader</code> function I use to begin my porting into a 1920 x 1080 game like “A Town Unfiltered”</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>renpy.register_shader("&lt;some unique name&gt;", variables="""
+    uniform sampler2D tex0;
+    uniform sampler2D tex1;
+    uniform vec2 u_model_size;
+    uniform float u_time;
+    uniform float u_start_time;
+    uniform float u_time_index_ratio;
+    uniform float u_num_frames;
+    varying vec2 v_tex_coord;
+    attribute vec2 a_tex_coord;
+""", vertex_200="""
+    v_tex_coord = a_tex_coord;
+""", fragment_functions="""
+
+... Bunch of Code ...
+
+    """, fragment_200="""
+    vec2 iResolution = vec2(1920, 1080);
+    vec2 fragCoord = v_tex_coord * iResolution;
+    float iTime_in = (u_time - u_start_time);
+    vec4 out_col = vec4(0.);
+
+    float time_index_ratio_in = u_time_index_ratio;
+    float num_frames_in = u_num_frames;
+
+    mainImage(out_col, fragCoord, iTime_in, iResolution, tex1, time_index_ratio_in, num_frames_in);
+
+    gl_FragColor = out_col;
+""")
+</code></pre></div></div>
+<p>Where the <code class="language-plaintext highlighter-rouge">mainImage</code> function is exactly the same as the ShaderToy one, except with all the uniforms attached to it.</p>
+
+<p>This particular shader had music attached to it so there are three uniforms associated with it: <code class="language-plaintext highlighter-rouge">u_time_index_ratio</code>, <code class="language-plaintext highlighter-rouge">u_num_frames</code>, and <code class="language-plaintext highlighter-rouge">tex1</code> (All non-texture uniforms start with <code class="language-plaintext highlighter-rouge">u_</code>). These are the parameters associated with telling the shader about the music texture associated with a song. A music texture is an image where each pixel represents a value of time and frequency. I set it up so that rows are the time axis and columns are the frequency. The <code class="language-plaintext highlighter-rouge">u_time_index_ratio</code>converts the time in seconds to which row number to look at, <code class="language-plaintext highlighter-rouge">u_num_frames</code> is used so that the animation associated with the song can be repeated, and <code class="language-plaintext highlighter-rouge">tex1</code> is the actual music texture. As a gift to the world, here is the python script I used to generate the music texture using <code class="language-plaintext highlighter-rouge">python</code>, <code class="language-plaintext highlighter-rouge">librosa</code>, <code class="language-plaintext highlighter-rouge">numpy</code>, and <code class="language-plaintext highlighter-rouge">pillow</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import librosa
+import numpy as np
+from PIL import Image
+
+import math
+
+
+# https://stackoverflow.com/questions/67076249/music-visualizer-using-python-and-librosa
+def next_power_of_2(x):
+    return 2 ** (math.ceil(math.log(x, 2)))
+
+
+def params_for_fps(fps=30, sr=16000):
+    frame_seconds = 1.0 / fps
+    frame_hop = round(frame_seconds * sr)  # in samples
+    frame_fft = next_power_of_2(2 * frame_hop)
+    rel_error = (frame_hop - (frame_seconds * sr)) / frame_hop
+
+    return frame_hop, frame_fft, rel_error
+
+
+def get_decibel(target_time, freq, linarize=True):
+    pow = spectrogram[int(freq * frequencies_index_ratio)][int(target_time * time_index_ratio)]
+    if linarize:
+        pow = (pow / 80) + 1
+        pow = np.clip(pow, 0., 1.)
+    return pow
+
+
+nFFT = 2048 * 4
+sampRate = 22050
+fps = 10
+
+seconds = 60 * 5
+frame_hop, frame_fft, frame_err = params_for_fps(fps=fps, sr=sampRate)
+print(f"Frame timestep error {frame_err * 100:.2f} %")
+drift = frame_err * seconds
+print(f"Drift over {seconds} seconds: {drift:.2f} seconds. {drift * fps:.2f} frames")
+
+time_series, sample_rate = librosa.load("&lt;music file&gt;.mp3", mono=True, sr=sampRate)
+
+# getting a matrix which contains amplitude values according to frequency and time indexes
+stft = np.abs(librosa.stft(time_series, hop_length=frame_hop, n_fft=frame_fft))
+# converting the matrix to decibel matrix
+spectrogram = librosa.amplitude_to_db(stft, ref=np.max)
+frequencies = librosa.core.fft_frequencies(n_fft=frame_fft)  # getting an array of frequencies
+times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sample_rate, hop_length=frame_hop, n_fft=frame_fft) # getting the array of times
+
+frequencies_index_ratio = len(frequencies) / frequencies[len(frequencies) - 1]
+time_index_ratio = len(times) / times[len(times) - 1]
+
+reducespec = np.zeros((64, spectrogram.shape[1]))
+
+maxFreq = np.max(frequencies)
+minFreq = 15.0  # Technically it is zero, but this looks better and won't break everything
+
+# Looks better if the frequency bins are logarithmic
+freq = np.logspace(np.log10(minFreq), np.log10(maxFreq), 65).tolist()
+
+# We want the middle of the bins
+freqList = [np.around((freq[j] + freq[j + 1]) / 2, 1) for j in range(len(freq) - 1)]
+
+for freqI, freqV in enumerate(freqList):
+    for timeI, timeV in enumerate(times):
+        try:
+            reducespec[freqI][timeI] = get_decibel(timeV, freqV)
+        except IndexError:
+            print("error at t=", timeV, "; f=", freqV)
+
+arrShape = reducespec.shape
+
+newImage = Image.new("RGBA", arrShape, color=0)
+
+for i in range(arrShape[0]):
+    for j in range(arrShape[1]):
+        powIn = reducespec[i][j]
+        pxV = int(np.clip(powIn * 255, 0., 255.))  # Only works if linearized between 0 and 255
+        newImage.putpixel((i, j), (pxV, pxV, pxV, 255)) # Nothing complicated, use any r/g/b value as the value for the bin
+
+newImage.save("&lt;Image Filename&gt;.png")
+
+with open("meta.txt", "w") as fp:
+    fp.write("time index ratio : " + str(time_index_ratio) + "\n number of frames : " + str(arrShape[1]))
+
+</code></pre></div></div>
+
+<p>Originally I was going to try to do this inside Ren’Py itself, but why when you just need the texture?</p>
+
+<p>Finally, there is one more uniform: <code class="language-plaintext highlighter-rouge">u_start_time</code> which is given by a piece of code I found inside Ren’Py which tells the entire game how long it has been open for (and is how the <code class="language-plaintext highlighter-rouge">u_time</code> uniform is set. It resets after a day, so as long as you aren’t trying to use these shaders after having the game open for 23 hours and 59 minutes, it should always work.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ currentstarttime = float((renpy.display.interface.frame_time - renpy.display.interface.init_time) % 86400)
+</code></pre></div></div>
+
+<p>and finally this is how I put it all together</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>transform movietest(input1):
+    Model().texture("&lt;music_texture&gt;").uniform("u_start_time", input1).uniform("u_time_index_ratio", &lt;Whatever popped out from above&gt;).uniform("u_num_frames", &lt;Whatever popped out from above&gt;)
+    shader [ "movie.test" ]
+
+screen movie_theater:
+    vbox:
+        textbutton "Leave" xalign 0.1 yalign 0.8 action Jump("finish_movie")
+
+
+label play_movie:
+  $ renpy.stop_predict_screen("movie1")
+  $ renpy.maximum_framerate(86400)
+  play music "&lt;music_file&gt;" fadein 0.5
+  pause 0.7 # Adjust to taste
+  $ currentstarttime = float((renpy.display.interface.frame_time - renpy.display.interface.init_time) % 86400)
+  show blue at movie1(currentstarttime) # blue generates a screen filling blue texture, which we overwrite with a shader
+  call screen movie_theater
+
+label finish_movie:
+    scene black with fade
+    hide blue
+    stop music fadeout 0.5
+    $ renpy.maximum_framerate(None)
+    pause 2.0
+    return
+
+</code></pre></div></div>
+
+<p>If you haven’t yet, try watching a movie in “A Town Unfiltered”; I spent a lot of time figuring this shit out.</p>
+
+  </div>
+<a class="u-url" href="/2021/10/22/Renpy-Shader.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <ul class="contact-list">
+          <li class="p-name">ipreg</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A place for my thoughts
+</p>
+      </div>
+    </div>
+
+    <div class="social-links">
+<ul class="social-media-list"><li><a rel="noopener noreferrer" href="https://github.com/ipreg" title="ipreg" target="_blank"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
+
+<script src=”https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id=”MathJax-script” async src=”https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

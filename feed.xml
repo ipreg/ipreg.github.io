@@ -1,5 +1,167 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://ipreg.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://ipreg.github.io/" rel="alternate" type="text/html" /><updated>2021-09-25T14:57:05-04:00</updated><id>https://ipreg.github.io/feed.xml</id><title type="html">IPreg’s Blog</title><subtitle>A place for my thoughts
-</subtitle><author><name>ipreg</name></author><entry><title type="html">Thoughts on Ren’Py Overall</title><link href="https://ipreg.github.io/2021/09/25/thoughts-on-renpy.html" rel="alternate" type="text/html" title="Thoughts on Ren’Py Overall" /><published>2021-09-25T00:00:00-04:00</published><updated>2021-09-25T00:00:00-04:00</updated><id>https://ipreg.github.io/2021/09/25/thoughts-on-renpy</id><content type="html" xml:base="https://ipreg.github.io/2021/09/25/thoughts-on-renpy.html">&lt;p&gt;This is an old post I made when I was (at the time) playing around a lot with dynamic scenes with lots of custom &lt;a href=&quot;https://www.renpy.org/dev-doc/html/cdd.html&quot;&gt;displayable&lt;/a&gt; objects; while that code was not used for version -0.1 of the mod, the rabbit hole I went down taught me a lot about how renpy actually takes images and puts them on screen; and also how to manipulate them. If you really wanted to, you can build any kind of game inside Ren’Py; it probably wouldn’t run very well, but the amount of flexibility is amazing. I have slightly edited the post, if you want to see the original click &lt;a href=&quot;https://f95zone.to/threads/a-town-unfiltered-a-town-uncovered-mod-wolfregis.34101/page-17#post-6059223&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://ipreg.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://ipreg.github.io/" rel="alternate" type="text/html" /><updated>2021-10-22T01:02:14-04:00</updated><id>https://ipreg.github.io/feed.xml</id><title type="html">IPreg’s Blog</title><subtitle>A place for my thoughts
+</subtitle><author><name>ipreg</name></author><entry><title type="html">Ren’Py Shaders</title><link href="https://ipreg.github.io/2021/10/22/Renpy-Shader.html" rel="alternate" type="text/html" title="Ren’Py Shaders" /><published>2021-10-22T00:00:00-04:00</published><updated>2021-10-22T00:00:00-04:00</updated><id>https://ipreg.github.io/2021/10/22/Renpy-Shader</id><content type="html" xml:base="https://ipreg.github.io/2021/10/22/Renpy-Shader.html">&lt;p&gt;I decided to spend some time learning how to perform shaders inside Ren’Py. Specifically I wanted to be able to port shaders from &lt;a href=&quot;https://www.shadertoy.com/&quot;&gt;ShaderToy&lt;/a&gt; into Ren’Py. While there &lt;a href=&quot;https://www.renpy.org/doc/html/model.html&quot;&gt;is a page on it&lt;/a&gt; in the documentation, it doesn’t really give very good examples on how to implement them yourself or that Ren’Py literally implements the entirety of GLSL (As long as your system supports it). These shaders can be placed on literally any image in the game and I actually got much better framerates inside Ren’Py then I did inside the Shadertoy website itself.&lt;/p&gt;
+
+&lt;!--more--&gt;
+&lt;h2 id=&quot;porting-shadertoy-audio-to-renpy&quot;&gt;Porting shadertoy audio to Ren’Py&lt;/h2&gt;
+&lt;p&gt;I figured out a way to do it with very little code change. The biggest challenge was dealing with uniforms, as I make exclusive use of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fragment_functions&lt;/code&gt; which do not have uniforms propagated through them. There were two ways to deal with these: pass them as function arguments, or use them in global variables; and unfortunately there isn’t a universal solution. If they don’t work as global variables, pass them as function arguments. As reference here is the generic &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;register_shader&lt;/code&gt; function I use to begin my porting into a 1920 x 1080 game like “A Town Unfiltered”&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;renpy.register_shader(&quot;&amp;lt;some unique name&amp;gt;&quot;, variables=&quot;&quot;&quot;
+    uniform sampler2D tex0;
+    uniform sampler2D tex1;
+    uniform vec2 u_model_size;
+    uniform float u_time;
+    uniform float u_start_time;
+    uniform float u_time_index_ratio;
+    uniform float u_num_frames;
+    varying vec2 v_tex_coord;
+    attribute vec2 a_tex_coord;
+&quot;&quot;&quot;, vertex_200=&quot;&quot;&quot;
+    v_tex_coord = a_tex_coord;
+&quot;&quot;&quot;, fragment_functions=&quot;&quot;&quot;
+
+... Bunch of Code ...
+
+    &quot;&quot;&quot;, fragment_200=&quot;&quot;&quot;
+    vec2 iResolution = vec2(1920, 1080);
+    vec2 fragCoord = v_tex_coord * iResolution;
+    float iTime_in = (u_time - u_start_time);
+    vec4 out_col = vec4(0.);
+
+    float time_index_ratio_in = u_time_index_ratio;
+    float num_frames_in = u_num_frames;
+
+    mainImage(out_col, fragCoord, iTime_in, iResolution, tex1, time_index_ratio_in, num_frames_in);
+
+    gl_FragColor = out_col;
+&quot;&quot;&quot;)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Where the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mainImage&lt;/code&gt; function is exactly the same as the ShaderToy one, except with all the uniforms attached to it.&lt;/p&gt;
+
+&lt;p&gt;This particular shader had music attached to it so there are three uniforms associated with it: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;u_time_index_ratio&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;u_num_frames&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tex1&lt;/code&gt; (All non-texture uniforms start with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;u_&lt;/code&gt;). These are the parameters associated with telling the shader about the music texture associated with a song. A music texture is an image where each pixel represents a value of time and frequency. I set it up so that rows are the time axis and columns are the frequency. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;u_time_index_ratio&lt;/code&gt;converts the time in seconds to which row number to look at, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;u_num_frames&lt;/code&gt; is used so that the animation associated with the song can be repeated, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tex1&lt;/code&gt; is the actual music texture. As a gift to the world, here is the python script I used to generate the music texture using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;librosa&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;numpy&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pillow&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import librosa
+import numpy as np
+from PIL import Image
+
+import math
+
+
+# https://stackoverflow.com/questions/67076249/music-visualizer-using-python-and-librosa
+def next_power_of_2(x):
+    return 2 ** (math.ceil(math.log(x, 2)))
+
+
+def params_for_fps(fps=30, sr=16000):
+    frame_seconds = 1.0 / fps
+    frame_hop = round(frame_seconds * sr)  # in samples
+    frame_fft = next_power_of_2(2 * frame_hop)
+    rel_error = (frame_hop - (frame_seconds * sr)) / frame_hop
+
+    return frame_hop, frame_fft, rel_error
+
+
+def get_decibel(target_time, freq, linarize=True):
+    pow = spectrogram[int(freq * frequencies_index_ratio)][int(target_time * time_index_ratio)]
+    if linarize:
+        pow = (pow / 80) + 1
+        pow = np.clip(pow, 0., 1.)
+    return pow
+
+
+nFFT = 2048 * 4
+sampRate = 22050
+fps = 10
+
+seconds = 60 * 5
+frame_hop, frame_fft, frame_err = params_for_fps(fps=fps, sr=sampRate)
+print(f&quot;Frame timestep error {frame_err * 100:.2f} %&quot;)
+drift = frame_err * seconds
+print(f&quot;Drift over {seconds} seconds: {drift:.2f} seconds. {drift * fps:.2f} frames&quot;)
+
+time_series, sample_rate = librosa.load(&quot;&amp;lt;music file&amp;gt;.mp3&quot;, mono=True, sr=sampRate)
+
+# getting a matrix which contains amplitude values according to frequency and time indexes
+stft = np.abs(librosa.stft(time_series, hop_length=frame_hop, n_fft=frame_fft))
+# converting the matrix to decibel matrix
+spectrogram = librosa.amplitude_to_db(stft, ref=np.max)
+frequencies = librosa.core.fft_frequencies(n_fft=frame_fft)  # getting an array of frequencies
+times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sample_rate, hop_length=frame_hop, n_fft=frame_fft) # getting the array of times
+
+frequencies_index_ratio = len(frequencies) / frequencies[len(frequencies) - 1]
+time_index_ratio = len(times) / times[len(times) - 1]
+
+reducespec = np.zeros((64, spectrogram.shape[1]))
+
+maxFreq = np.max(frequencies)
+minFreq = 15.0  # Technically it is zero, but this looks better and won't break everything
+
+# Looks better if the frequency bins are logarithmic
+freq = np.logspace(np.log10(minFreq), np.log10(maxFreq), 65).tolist()
+
+# We want the middle of the bins
+freqList = [np.around((freq[j] + freq[j + 1]) / 2, 1) for j in range(len(freq) - 1)]
+
+for freqI, freqV in enumerate(freqList):
+    for timeI, timeV in enumerate(times):
+        try:
+            reducespec[freqI][timeI] = get_decibel(timeV, freqV)
+        except IndexError:
+            print(&quot;error at t=&quot;, timeV, &quot;; f=&quot;, freqV)
+
+arrShape = reducespec.shape
+
+newImage = Image.new(&quot;RGBA&quot;, arrShape, color=0)
+
+for i in range(arrShape[0]):
+    for j in range(arrShape[1]):
+        powIn = reducespec[i][j]
+        pxV = int(np.clip(powIn * 255, 0., 255.))  # Only works if linearized between 0 and 255
+        newImage.putpixel((i, j), (pxV, pxV, pxV, 255)) # Nothing complicated, use any r/g/b value as the value for the bin
+
+newImage.save(&quot;&amp;lt;Image Filename&amp;gt;.png&quot;)
+
+with open(&quot;meta.txt&quot;, &quot;w&quot;) as fp:
+    fp.write(&quot;time index ratio : &quot; + str(time_index_ratio) + &quot;\n number of frames : &quot; + str(arrShape[1]))
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Originally I was going to try to do this inside Ren’Py itself, but why when you just need the texture?&lt;/p&gt;
+
+&lt;p&gt;Finally, there is one more uniform: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;u_start_time&lt;/code&gt; which is given by a piece of code I found inside Ren’Py which tells the entire game how long it has been open for (and is how the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;u_time&lt;/code&gt; uniform is set. It resets after a day, so as long as you aren’t trying to use these shaders after having the game open for 23 hours and 59 minutes, it should always work.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ currentstarttime = float((renpy.display.interface.frame_time - renpy.display.interface.init_time) % 86400)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;and finally this is how I put it all together&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;transform movietest(input1):
+    Model().texture(&quot;&amp;lt;music_texture&amp;gt;&quot;).uniform(&quot;u_start_time&quot;, input1).uniform(&quot;u_time_index_ratio&quot;, &amp;lt;Whatever popped out from above&amp;gt;).uniform(&quot;u_num_frames&quot;, &amp;lt;Whatever popped out from above&amp;gt;)
+    shader [ &quot;movie.test&quot; ]
+
+screen movie_theater:
+    vbox:
+        textbutton &quot;Leave&quot; xalign 0.1 yalign 0.8 action Jump(&quot;finish_movie&quot;)
+
+
+label play_movie:
+  $ renpy.stop_predict_screen(&quot;movie1&quot;)
+  $ renpy.maximum_framerate(86400)
+  play music &quot;&amp;lt;music_file&amp;gt;&quot; fadein 0.5
+  pause 0.7 # Adjust to taste
+  $ currentstarttime = float((renpy.display.interface.frame_time - renpy.display.interface.init_time) % 86400)
+  show blue at movie1(currentstarttime) # blue generates a screen filling blue texture, which we overwrite with a shader
+  call screen movie_theater
+
+label finish_movie:
+    scene black with fade
+    hide blue
+    stop music fadeout 0.5
+    $ renpy.maximum_framerate(None)
+    pause 2.0
+    return
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If you haven’t yet, try watching a movie in “A Town Unfiltered”; I spent a lot of time figuring this shit out.&lt;/p&gt;</content><author><name>ipreg</name></author><summary type="html">I decided to spend some time learning how to perform shaders inside Ren’Py. Specifically I wanted to be able to port shaders from ShaderToy into Ren’Py. While there is a page on it in the documentation, it doesn’t really give very good examples on how to implement them yourself or that Ren’Py literally implements the entirety of GLSL (As long as your system supports it). These shaders can be placed on literally any image in the game and I actually got much better framerates inside Ren’Py then I did inside the Shadertoy website itself.</summary></entry><entry><title type="html">Thoughts on Ren’Py Overall</title><link href="https://ipreg.github.io/2021/09/25/thoughts-on-renpy.html" rel="alternate" type="text/html" title="Thoughts on Ren’Py Overall" /><published>2021-09-25T00:00:00-04:00</published><updated>2021-09-25T00:00:00-04:00</updated><id>https://ipreg.github.io/2021/09/25/thoughts-on-renpy</id><content type="html" xml:base="https://ipreg.github.io/2021/09/25/thoughts-on-renpy.html">&lt;p&gt;This is an old post I made when I was (at the time) playing around a lot with dynamic scenes with lots of custom &lt;a href=&quot;https://www.renpy.org/dev-doc/html/cdd.html&quot;&gt;displayable&lt;/a&gt; objects; while that code was not used for version -0.1 of the mod, the rabbit hole I went down taught me a lot about how renpy actually takes images and puts them on screen; and also how to manipulate them. If you really wanted to, you can build any kind of game inside Ren’Py; it probably wouldn’t run very well, but the amount of flexibility is amazing. I have slightly edited the post, if you want to see the original click &lt;a href=&quot;https://f95zone.to/threads/a-town-unfiltered-a-town-uncovered-mod-wolfregis.34101/page-17#post-6059223&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;post&quot;&gt;Post&lt;/h3&gt;
 &lt;p&gt;Renpy is simultaneously really powerful and really not. What I mean is that renpytom has a very specific philosophy about the type of engine he is building, which seems to be: my engine is for visual novels. As I have worked extensively with renpy for several months now, I would like to add to that statement. Specifically, renpy is for “reversible” and “skippable” visual novels with basic minigames thrown in. When I first started working with renpy it seemed like a really nice API for displaying images and text with pygame.&lt;/p&gt;

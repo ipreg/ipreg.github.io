@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="IPreg’s Blog" />
 <script type="application/ld+json">
-{"@type":"WebSite","url":"https://ipreg.github.io/","headline":"IPreg’s Blog","author":{"@type":"Person","name":"ipreg"},"description":"A place for my thoughts","name":"IPreg’s Blog","@context":"https://schema.org"}</script>
+{"@type":"WebSite","headline":"IPreg’s Blog","url":"https://ipreg.github.io/","author":{"@type":"Person","name":"ipreg"},"description":"A place for my thoughts","name":"IPreg’s Blog","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ipreg.github.io/feed.xml" title="IPreg's Blog" />
 </head>
@@ -45,13 +45,22 @@
 
   <ul class="post-list">
 <li>
+        <span class="post-meta">Nov 16, 2021</span>
+        <h3>
+          <a class="post-link" href="/2021/11/16/RenPy-library-support-and-other-such-nonsense.html">
+            Ren'Py library support, and other such nonsense
+          </a>
+        </h3>
+<p>Have you ever thought “it would be really great to have the entire standard python library or other libraries like <a href="https://www.google.com/search?q=renpy+numpy+site%3Alemmasoft.renai.us" target="_blank" rel="noopener noreferrer">Numpy</a> inside Ren’Py, but the packages pip installs aren’t working or keep returning errors?”. Well, you are probably going to need to recompile Ren’Py of which the information about is no where and how to change the build files are similar. I also discuss using PyPy as a supplement to Ren’Py to help move things along at the bottom of the post.</p>
+</li>
+<li>
         <span class="post-meta">Oct 22, 2021</span>
         <h3>
           <a class="post-link" href="/2021/10/22/Thoughts-On-Triggers.html">
             Thoughts on Triggers
           </a>
         </h3>
-<p>A key goal of mine when I went into “A Town Unfiltered” was to make it as dynamic as possible. The original game was running into technical debt where every change had to be accounted for in long sections of if-else statements. This lead to a large list of “story” variables which kept track of the game state and different situations had to ensure what combination of story variables were what values to lead the player into the correct conversation. This is really bad game design on the development side, while it initially allows for quick prototyping and iteration due to the simplicity of the code, for anything more complex than a game jam game it will become a ball and chain where it slows development and to fix becomes making a whole new game. This is what I suspect occurred with “yandere simulator” and is happening to “A Town Uncovered”, though the story events are disparate enough that this sort of design kind of works if you are essentially making a bunch of small games inside a big one, which might prevent “A Town Uncovered” from falling into a similar trap (Having the resources to pay for programmers to spend the time to trudge through it helps too).</p>
+<p>A key goal of mine when I went into “A Town Unfiltered” was to make it as dynamic as possible. The original game was running into technical debt where every change had to be accounted for in long sections of if-else statements. This lead to a large list of “story” variables which kept track of the game state and different situations had to ensure what combination of story variables were what values to lead the player into the correct conversation. This is really bad game design on the development side, while it initially allows for quick prototyping and iteration due to the simplicity of the code, for anything more complex than a game jam game it will become a ball and chain where it slows development and to fix becomes making a whole new game. This is what I suspect occurred with “yandere simulator” and it could happen to “A Town Uncovered”, I think that the story events are disparate enough that this sort of design kind of works because they are essentially making a bunch of small games inside a big one, which might prevent them from falling into a similar trap (Having the resources to pay for programmers to spend the time to trudge through it helps too).</p>
 </li>
 <li>
         <span class="post-meta">Oct 22, 2021</span>

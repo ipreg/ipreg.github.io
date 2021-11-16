@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Ren’Py library support, and other such nonsense | IPreg’s Blog</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Ren’Py library support, and other such nonsense" />
+<meta name="author" content="ipreg" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Have you ever thought “it would be really great to have the entire standard python library or other libraries like Numpy inside Ren’Py, but the packages pip installs aren’t working or keep returning errors?”. Well, you are probably going to need to recompile Ren’Py of which the information about is no where and how to change the build files are similar. I also discuss using PyPy as a supplement to Ren’Py to help move things along at the bottom of the post." />
+<meta property="og:description" content="Have you ever thought “it would be really great to have the entire standard python library or other libraries like Numpy inside Ren’Py, but the packages pip installs aren’t working or keep returning errors?”. Well, you are probably going to need to recompile Ren’Py of which the information about is no where and how to change the build files are similar. I also discuss using PyPy as a supplement to Ren’Py to help move things along at the bottom of the post." />
+<link rel="canonical" href="https://ipreg.github.io/2021/11/16/RenPy-library-support-and-other-such-nonsense.html" />
+<meta property="og:url" content="https://ipreg.github.io/2021/11/16/RenPy-library-support-and-other-such-nonsense.html" />
+<meta property="og:site_name" content="IPreg’s Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-11-16T00:00:00-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Ren’Py library support, and other such nonsense" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"Ren’Py library support, and other such nonsense","dateModified":"2021-11-16T00:00:00-05:00","datePublished":"2021-11-16T00:00:00-05:00","url":"https://ipreg.github.io/2021/11/16/RenPy-library-support-and-other-such-nonsense.html","author":{"@type":"Person","name":"ipreg"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://ipreg.github.io/2021/11/16/RenPy-library-support-and-other-such-nonsense.html"},"description":"Have you ever thought “it would be really great to have the entire standard python library or other libraries like Numpy inside Ren’Py, but the packages pip installs aren’t working or keep returning errors?”. Well, you are probably going to need to recompile Ren’Py of which the information about is no where and how to change the build files are similar. I also discuss using PyPy as a supplement to Ren’Py to help move things along at the bottom of the post.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://ipreg.github.io/feed.xml" title="IPreg's Blog" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper">
+<a class="site-title" rel="author" href="/">IPreg's Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger">
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewbox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav>
+</div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Ren'Py library support, and other such nonsense</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-11-16T00:00:00-05:00" itemprop="datePublished">
+        Nov 16, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Have you ever thought “it would be really great to have the entire standard python library or other libraries like <a href="https://www.google.com/search?q=renpy+numpy+site%3Alemmasoft.renai.us" target="_blank" rel="noopener noreferrer">Numpy</a> inside Ren’Py, but the packages pip installs aren’t working or keep returning errors?”. Well, you are probably going to need to recompile Ren’Py of which the information about is no where and how to change the build files are similar. I also discuss using PyPy as a supplement to Ren’Py to help move things along at the bottom of the post.
+<!--more--></p>
+<h1 id="rebuilding-renpy">Rebuilding Ren’Py</h1>
+<h2 id="renpy-build-introduction">Ren’Py Build Introduction</h2>
+<p>The way Ren’Py actually builds itself is hidden inside the <a href="https://github.com/renpy/renpy-build" target="_blank" rel="noopener noreferrer">Ren’Py Build</a> repository. The main files to focus on is inside the <a href="https://github.com/renpy/renpy-build/tree/master/tasks" target="_blank" rel="noopener noreferrer">tasks</a> folder, most of the repo is making things nice and whatnot; the <a href="https://github.com/renpy/renpy-build/tree/master/tasks" target="_blank" rel="noopener noreferrer">tasks</a> folder takes the various things Ren’Py Tom wants from the dependencies and modifies them to be “easier” to manage. There are three main components to  Ren’Py: all the C stuff, all the Python stuff, and all the non-linear time stuff. This post will mostly talk about the first two as <a href="/2021/09/25/thoughts-on-renpy.html">this post</a> discusses my thoughts on the last one. If you are going down this road, then you will need to understand how Ren’Py and Python interact; and how Python works at it’s core.</p>
+<h2 id="how-does-python-work">How does Python work?</h2>
+<p>When dealing with things at this level, it helps me to think about Python not as the <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer">thing you download on the website</a> but as instead the <a href="https://docs.python.org/3/reference/grammar.html" target="_blank" rel="noopener noreferrer">Python Grammar Specification</a>; <a href="https://en.wikipedia.org/wiki/Programming_language_implementation" target="_blank" rel="noopener noreferrer">which has several implementations</a>. The two most popular implementations are <a href="https://github.com/python/cpython" target="_blank" rel="noopener noreferrer">CPython</a> (<a href="https://en.wikipedia.org/wiki/CPython" target="_blank" rel="noopener noreferrer">wiki</a>) and <a href="https://foss.heptapod.net/pypy/pypy" target="_blank" rel="noopener noreferrer">PyPy</a>(<a href="https://en.wikipedia.org/wiki/PyPy" target="_blank" rel="noopener noreferrer">wiki</a>). CPython is the “official” python implementation ran by the <a href="https://www.python.org/psf-landing/" target="_blank" rel="noopener noreferrer">PSF</a> which is written in C, while PyPy is “written in Python” (A very squirrely phrase for a reason, as <a href="https://doc.pypy.org/en/latest/architecture.html" target="_blank" rel="noopener noreferrer">it’s pretty complicated</a>). Ren’Py uses the CPython implementation; which means for Ren’Py to work it must take all the C code and package it up for everyone to use; a problem that honestly goes back to the beginning of computers, and how computer languages have risen and fallen trying to make this easier. At least now we don’t usually worry about the specific processors people have as everyone has mostly agreed to use the same sets of <a href="https://en.wikipedia.org/wiki/Comparison_of_instruction_set_architectures" target="_blank" rel="noopener noreferrer">Instructions</a>.</p>
+<h2 id="renpy-building-and-its-beautiful-tasks">Ren’Py building and it’s beautiful tasks</h2>
+<p>Back to Ren’Py tasks, if you look at the <a href="https://github.com/renpy/renpy-build/blob/master/tasks/python2.py" target="_blank" rel="noopener noreferrer">Python 2 Task</a>, <a href="https://github.com/renpy/renpy-build/blob/master/tasks/pythonlib.py" target="_blank" rel="noopener noreferrer">Python Library Task</a> and the <a href="https://github.com/renpy/renpy-build/blob/master/tasks/renpython.py" target="_blank" rel="noopener noreferrer">Renpy Library Task</a>; this should give you an idea of how the build system bundles all this up. The Python 2 Task takes the CPython source and compiles it into a python binary directly, with some small changes, one for every supported system. The build system also takes all of the “Python Standard Library” C source files and compiles <em>all of them</em> into a single object file called “librenpython” which you will find in the associated “&lt;renpy-sdk&gt;/lib/&lt;architechure&gt;” folder (The renpy-sdk is what is downloaded from the <a href="https://www.renpy.org/" target="_blank" rel="noopener noreferrer">official Ren’Py website</a>). It also does something similar for the “Python Standard Library” Python source files which is <a href="https://stackabuse.com/differences-between-pyc-pyd-and-pyo-python-files/" target="_blank" rel="noopener noreferrer">“compiled” into Python module code</a>. You can actually see a couple fingerprints left behind inside Ren’Py from all of this compilation. If you open up the Ren’Py terminal in any Ren’Py project, and dig into the depths of the code, you can find it.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; import sys; print(repr(sys.modules['builtins'].super.__code__))
+&lt;code object newsuper at 0000000002ba00b0, file "/home/tom/ab/renpy-build/tmp/install.linux-x86_64/lib/python2.7/site-packages/future/builtins/newsuper.py", line 45&gt;
+</code></pre></div></div>
+
+<p>Aside: This is the <code class="language-plaintext highlighter-rouge">super</code> function from the absolutely fantastic <a href="https://github.com/PythonCharmers/python-future" target="_blank" rel="noopener noreferrer">Python Future</a> library which allows for some Python 3 stuff to show up in Python 2 (and Ren’Py by extension). This is not documented anywhere, so let me say that if you are extensively using Python in your Ren’Py project; this and the <a href="https://github.com/benjaminp/six" target="_blank" rel="noopener noreferrer">Six library</a> are like making an old family recipe in your kitchen.</p>
+<h2 id="finally-how-to-rebuild-with-dependencies">Finally, how to rebuild with dependencies</h2>
+<p>(Warning: this is based on speculation as my computer isn’t powerful enough to do it \;_\;) After the Setup step in the Ren’Py Build process, which downloads all the files and puts them into the proper places. Edit <a href="https://github.com/renpy/renpy-build/blob/master/tasks/renpython.py" target="_blank" rel="noopener noreferrer">renpython</a> and <a href="https://github.com/renpy/renpy-build/blob/master/tasks/pythonlib.py" target="_blank" rel="noopener noreferrer">pythonlib</a> to include the dependencies. Looking at the <a href="https://github.com/python/cpython#build-instructions" target="_blank" rel="noopener noreferrer">CPython build documentation</a> should point you into the correct direction on what to edit.</p>
+
+<h1 id="what-if-i-dont-want-to-do-that">What if I don’t want to do that?</h1>
+<p>Well, firstly this comes down to a singular issue where the Ren’Py compiled Python is different from regular Python. This means the Ren’Py python binary file isn’t looking for more than what is pointed to in the compiled library files; and that those compiled python libraries are also set in stone so they don’t look for edits as well. There are several things which determine how far you want to go:</p>
+<ul>
+  <li>Take some of the PyPy code (with credit) and supplement the incomplete standard library</li>
+  <li>Use the now more complete standard library and see if what you are trying works</li>
+  <li>If it doesn’t work, you will need to put in elbow grease and teach the existing python to try to find, then load the code with changes to <code class="language-plaintext highlighter-rouge">__init__.py</code> for the module using your now more complete library.</li>
+  <li>Be very careful about the Ren’Py namespace as it maps itself to <code class="language-plaintext highlighter-rouge">store</code> and everything in <code class="language-plaintext highlighter-rouge">store</code> is thrown into <code class="language-plaintext highlighter-rouge">pickle</code> for saving and loading. Now <code class="language-plaintext highlighter-rouge">pickle</code> (Esp. in Python 2.7) is not a general python serializer so polluting the namespace has serious consequences.</li>
+</ul>
+
+<h1 id="wait-is-that-it">Wait, is that it?</h1>
+<p><a href="https://github.com/ipreg/RenPy_PyPy" target="_blank" rel="noopener noreferrer">Here is a script I used in my testing of PyPy</a>; I ultimately determined that I wouldn’t need any of this and it turned out to be a huge waste of time.</p>
+
+  </div>
+<a class="u-url" href="/2021/11/16/RenPy-library-support-and-other-such-nonsense.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <ul class="contact-list">
+          <li class="p-name">ipreg</li>
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A place for my thoughts
+</p>
+      </div>
+    </div>
+
+    <div class="social-links">
+<ul class="social-media-list"><li><a rel="noopener noreferrer" href="https://github.com/ipreg" title="ipreg" target="_blank"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
+
+<script src=”https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id=”MathJax-script” async src=”https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
